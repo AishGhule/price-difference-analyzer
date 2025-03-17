@@ -109,10 +109,30 @@ const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplet
         functionality = getDefaultFunctionality(activeIngredient, productName);
       }
       
-      // Ensure gender is properly handled
-      const gender = item['Gender Classification'] || 
-                    (item['Product Name']?.toLowerCase().includes('men') ? 'Men' : 
-                     item['Product Name']?.toLowerCase().includes('women') ? 'Women' : 'Unisex');
+      // Get the gender classification directly from the data
+      // Make sure it's properly formatted as "Men", "Women", or "Unisex"
+      let gender = item['Gender Classification'];
+      
+      // If gender classification is missing, try to infer from product name
+      if (!gender) {
+        const lowerName = productName.toLowerCase();
+        if (lowerName.includes('men')) {
+          gender = 'Men';
+        } else if (lowerName.includes('women')) {
+          gender = 'Women';
+        } else {
+          gender = 'Unisex';
+        }
+      }
+      
+      // Ensure gender is formatted correctly
+      if (typeof gender === 'string') {
+        if (gender.toLowerCase() === 'male' || gender.toLowerCase() === 'm') {
+          gender = 'Men';
+        } else if (gender.toLowerCase() === 'female' || gender.toLowerCase() === 'f') {
+          gender = 'Women';
+        }
+      }
       
       return {
         ...item,
