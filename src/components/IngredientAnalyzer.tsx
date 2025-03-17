@@ -33,7 +33,8 @@ const knownIngredients: Record<string, string> = {
   "allantoin": "Soothing and healing",
   "centella asiatica": "Calming and healing",
   "caffeine": "Vasoconstriction and de-puffing",
-  "collagen": "Hydration and elasticity"
+  "collagen": "Hydration and elasticity",
+  "cocamidopropyl betaine": "Gentle cleansing and foaming agent"
 };
 
 const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplete }) => {
@@ -53,6 +54,7 @@ const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplet
       currentItem++;
       setProgress(Math.floor((currentItem / totalItems) * 100));
       
+      // Make sure we're working with lowercase for comparison
       const activeIngredient = item['Active Ingredient']?.toLowerCase() || '';
       
       // Look up the functionality from our known ingredients mapping
@@ -65,6 +67,7 @@ const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplet
         }
       });
       
+      // Make sure we preserve the Gender Classification field correctly
       return {
         ...item,
         'Functionality of Active Ingredient': functionality
