@@ -34,7 +34,43 @@ const knownIngredients: Record<string, string> = {
   "centella asiatica": "Calming and healing",
   "caffeine": "Vasoconstriction and de-puffing",
   "collagen": "Hydration and elasticity",
-  "cocamidopropyl betaine": "Gentle cleansing and foaming agent"
+  "cocamidopropyl betaine": "Gentle cleansing and foaming agent",
+  "dimethicone": "Moisturizing and barrier protection",
+  "parfum": "Fragrance and olfactory enhancement",
+  "cocamide mea": "Foam boosting and conditioning",
+  "sodium laureth sulfate": "Cleansing and foam production",
+  "panthenol": "Moisturizing and skin conditioning",
+  "biotin": "Hair strengthening and conditioning",
+  "polyquaternium": "Conditioning and static reduction",
+  "menthol": "Cooling and refreshing sensation"
+};
+
+// Default functionality based on product categories or ingredients
+const getDefaultFunctionality = (activeIngredient: string, productName: string): string => {
+  const lowerProductName = productName.toLowerCase();
+  
+  if (lowerProductName.includes('shampoo')) {
+    return "Cleansing and scalp health";
+  } else if (lowerProductName.includes('conditioner')) {
+    return "Hair conditioning and detangling";
+  } else if (lowerProductName.includes('moisturizer') || lowerProductName.includes('lotion')) {
+    return "Skin hydration and moisturizing";
+  } else if (lowerProductName.includes('cleanser') || lowerProductName.includes('wash')) {
+    return "Skin cleansing and purifying";
+  } else if (lowerProductName.includes('deodorant')) {
+    return "Odor neutralizing and freshness";
+  } else if (lowerProductName.includes('razor') || lowerProductName.includes('shave')) {
+    return "Hair removal and skin protection";
+  } else {
+    // Extract possible functional words from the ingredient itself
+    if (activeIngredient.includes('oil')) return "Moisturizing and nourishing";
+    if (activeIngredient.includes('extract')) return "Natural conditioning and nurturing";
+    if (activeIngredient.includes('butter')) return "Deep moisturizing and protection";
+    if (activeIngredient.includes('vitamin')) return "Nourishing and protective";
+    
+    // Default if nothing else matches
+    return "Personal care and skin health";
+  }
 };
 
 const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplete }) => {
@@ -56,9 +92,10 @@ const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplet
       
       // Make sure we're working with lowercase for comparison
       const activeIngredient = item['Active Ingredient']?.toLowerCase() || '';
+      const productName = item['Product Name'] || '';
       
       // Look up the functionality from our known ingredients mapping
-      let functionality = "Unknown";
+      let functionality = null;
       
       // Check if the active ingredient contains any of our known ingredients
       Object.keys(knownIngredients).forEach(knownIngredient => {
@@ -67,10 +104,20 @@ const IngredientAnalyzer: React.FC<IngredientAnalyzerProps> = ({ data, onComplet
         }
       });
       
-      // Make sure we preserve the Gender Classification field correctly
+      // If no functionality found, use the default based on product type
+      if (!functionality) {
+        functionality = getDefaultFunctionality(activeIngredient, productName);
+      }
+      
+      // Ensure gender is properly handled
+      const gender = item['Gender Classification'] || 
+                    (item['Product Name']?.toLowerCase().includes('men') ? 'Men' : 
+                     item['Product Name']?.toLowerCase().includes('women') ? 'Women' : 'Unisex');
+      
       return {
         ...item,
-        'Functionality of Active Ingredient': functionality
+        'Functionality of Active Ingredient': functionality,
+        'Gender Classification': gender
       };
     });
     
