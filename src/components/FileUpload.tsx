@@ -37,11 +37,26 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataUploaded }) => {
       const text = await file.text();
       const result = parseCSV(text);
       
-      // Check if file has required columns
-      const requiredColumns = ['Brand', 'Product Name', 'Price', 'Active Ingredient', 'Inactive Ingredients', 'Gender Classification'];
-      const fileColumns = Object.keys(result[0] || {});
+      // Check if file has required columns with more flexible column name checking
+      const requiredColumns = ['Brand', 'Product Name', 'Active Ingredient', 'Inactive Ingredients', 'Gender Classification'];
+      // Special check for Price column which might have variations
+      const priceColumnFound = Object.keys(result[0] || {}).some(
+        col => col === 'Price' || col === 'Price (€)' || col.startsWith('Price')
+      );
       
-      const missingColumns = requiredColumns.filter(col => !fileColumns.includes(col));
+      if (!priceColumnFound) {
+        requiredColumns.push('Price'); // Add price to missing columns if not found
+      }
+      
+      const fileColumns = Object.keys(result[0] || {});
+      const missingColumns = requiredColumns.filter(col => {
+        // For regular columns, check exact match
+        if (col !== 'Price') {
+          return !fileColumns.includes(col);
+        }
+        // Price is already checked above
+        return false;
+      });
       
       if (missingColumns.length > 0) {
         toast.error(`Missing required columns: ${missingColumns.join(', ')}`);
@@ -49,8 +64,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ onDataUploaded }) => {
         return;
       }
       
-      toast.success(`Successfully processed ${result.length} rows of data`);
-      onDataUploaded(result);
+      // Normalize the data - make sure price column is consistently named "Price"
+      const normalizedData = result.map(row => {
+        const newRow = { ...row };
+        // Check for price column variations and normalize to "Price"
+        for (const key of Object.keys(newRow)) {
+          if (key === 'Price (€)' || (key.startsWith('Price') && key !== 'Price')) {
+            newRow.Price = newRow[key];
+            delete newRow[key];
+          }
+        }
+        return newRow;
+      });
+      
+      toast.success(`Successfully processed ${normalizedData.length} rows of data`);
+      onDataUploaded(normalizedData);
     } catch (error) {
       console.error(error);
       toast.error('Error processing file. Please check the format.');
